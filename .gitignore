@@ -1,0 +1,37 @@
+# Compiled files and binaries
+bin/
+obj/
+
+# User-specific files that shouldn't be versioned
+*.user
+*.rsuser
+*.suo
+
+# Visual Studio configuration files
+.vscode/
+.vs/
+
+# Rider/JetBrains specific files
+.idea/
+*.sln.iml
+
+# NuGet packages
+*.nupkg
+*.snupkg
+
+# Logs and databases
+*.log
+*.ldf
+*.mdf
+
+# Publish outputs
+Publish/
+out/
+
+# .NET specific files
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Resharper files
+_ReSharper*/
