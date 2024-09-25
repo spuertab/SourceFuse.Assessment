@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SourceFuse.Assessment.Common.Resources.Entities;
+using SourceFuse.Assessment.Common.Models;
 using SourceFuse.Assessment.Common.Services;
 
 namespace SourceFuse.Assessment.Api.Controllers
@@ -18,7 +18,7 @@ namespace SourceFuse.Assessment.Api.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin,User")]
-        public async Task<ActionResult<IEnumerable<Song>>> GetSongs()
+        public async Task<ActionResult<IEnumerable<SongModel>>> GetSongs()
         {
             var songs = await _songService.GetSongsAsync();
             return Ok(songs);
@@ -26,7 +26,7 @@ namespace SourceFuse.Assessment.Api.Controllers
 
         [HttpGet("{id}")]
         [Authorize(Roles = "Admin,User")]
-        public async Task<ActionResult<Song>> GetSong(Guid id)
+        public async Task<ActionResult<SongModel>> GetSong(Guid id)
         {
             var song = await _songService.GetSongByIdAsync(id);
 
@@ -40,7 +40,7 @@ namespace SourceFuse.Assessment.Api.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<Song>> PostSong([FromForm] IFormFile file, [FromForm] Song song)
+        public async Task<ActionResult<SongModel>> PostSong([FromForm] IFormFile file, [FromForm] SongModel song)
         {
             var createdSong = await _songService.AddSongAsync(file, song);
             return CreatedAtAction(nameof(GetSong), new { id = createdSong.SongId }, createdSong);
@@ -48,7 +48,7 @@ namespace SourceFuse.Assessment.Api.Controllers
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> PutSong(Guid id, Song song)
+        public async Task<IActionResult> PutSong(Guid id, SongModel song)
         {
             try
             {

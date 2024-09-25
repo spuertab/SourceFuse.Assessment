@@ -1,71 +1,33 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using SourceFuse.Assessment.Common.Models;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+using SourceFuse.Assessment.Common.Services;
 
 namespace SourceFuse.Assessment.Api.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+    namespace SourceFuse.Assessment.Api.Controllers
     {
-        private readonly IConfiguration _configuration;
-
-        public AuthController(IConfiguration configuration)
+        [ApiController]
+        [Route("api/[controller]")]
+        public class AuthController : ControllerBase
         {
-            _configuration = configuration;
-        }
+            private readonly IAuthService _authService;
 
-        [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginModel model)
-        {
-            if ((model.Username == "spuertab1" || model.Username == "spuertab2") && model.Password == "123")
+            public AuthController(IAuthService authService)
             {
-                string[] userRoles;
-                if (model.Username == "spuertab1")
-                {
-                    userRoles = ["Admin", "User"];
-                }
-                else
-                {
-                    userRoles = ["User"];
-                }
-
-                var token = GenerateJwtToken(model.Username, userRoles);
-                return Ok(new { Token = token });
+                _authService = authService;
             }
 
-            return Unauthorized();
-        }
-
-        private string GenerateJwtToken(string username, string[] roles)
-        {
-            var jwtSettings = _configuration.GetSection("Jwt");
-
-            var claims = new List<Claim>
+            [HttpPost("login")]
+            public IActionResult Login([FromBody] LoginModel model)
             {
-                new Claim(JwtRegisteredClaimNames.Sub, username),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
+                var token = _authService.Login(model);
+                if (token != null)
+                {
+                    return Ok(new { Token = token });
+                }
 
-            foreach (var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
+                return Unauthorized();
             }
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                issuer: jwtSettings["Issuer"],
-                audience: jwtSettings["Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddMinutes(double.Parse(jwtSettings["ExpirationMinutes"])),
-                signingCredentials: creds);
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
