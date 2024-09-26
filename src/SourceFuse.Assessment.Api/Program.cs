@@ -33,8 +33,9 @@ builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
 builder.Services.AddAWSService<IAmazonS3>();
 
 // Register repositories and services
-builder.Services.AddScoped<ISongRepository, SongRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISongService, SongService>();
+builder.Services.AddScoped<ISongRepository, SongRepository>();
 
 // Register AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));

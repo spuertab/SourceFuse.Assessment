@@ -49,6 +49,11 @@ namespace SourceFuse.Assessment.Api.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<SongModel>> PostSong([FromForm] IFormFile file, [FromForm] SongModel song)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             _logger.LogInformation("Adding a new song with title: {Title}", song.Title);
             var createdSong = await _songService.AddSongAsync(file, song);
             _logger.LogInformation("Added new song with ID: {Id}", createdSong.SongId);
@@ -59,6 +64,11 @@ namespace SourceFuse.Assessment.Api.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PutSong(Guid id, SongModel song)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             _logger.LogInformation("Updating song with ID: {Id}", id);
             await _songService.UpdateSongAsync(id, song);
             _logger.LogInformation("Updated song with ID: {Id}", id);
