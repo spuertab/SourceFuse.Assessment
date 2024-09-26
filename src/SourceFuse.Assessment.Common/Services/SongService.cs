@@ -24,10 +24,10 @@ namespace SourceFuse.Assessment.Common.Services
             _bucketName = configuration["AWS:BucketName"];
         }
 
-        public async Task<IEnumerable<SongModel>> GetSongsAsync()
+        public async Task<IEnumerable<SongRespModel>> GetSongsAsync()
         {
             var songs = await _songRepository.GetSongsAsync();
-            var songModels = _mapper.Map<IEnumerable<SongModel>>(songs);
+            var songModels = _mapper.Map<IEnumerable<SongRespModel>>(songs);
 
             foreach (var songModel in songModels)
             {
@@ -37,10 +37,10 @@ namespace SourceFuse.Assessment.Common.Services
             return songModels;
         }
 
-        public async Task<SongModel> GetSongByIdAsync(Guid id)
+        public async Task<SongRespModel> GetSongByIdAsync(Guid id)
         {
             var song = await _songRepository.GetSongByIdAsync(id);
-            var songModel = _mapper.Map<SongModel>(song);
+            var songModel = _mapper.Map<SongRespModel>(song);
 
             if (songModel != null)
             {
@@ -50,11 +50,17 @@ namespace SourceFuse.Assessment.Common.Services
             return songModel;
         }
 
-        public async Task<SongModel> AddSongAsync(IFormFile file, SongModel songModel)
+        public async Task<SongRespModel> AddSongAsync(IFormFile file, SongReqModel songModel)
         {
             if (!IsMusicFile(file))
             {
                 throw new ArgumentException("The file must be a valid music format.");
+            }
+
+            var existingSong = await _songRepository.GetSongByIdAsync(songModel.SongId);
+            if (existingSong != null)
+            {
+                throw new InvalidOperationException("A song with the same ID already exists.");
             }
 
             var song = _mapper.Map<Song>(songModel);
@@ -73,13 +79,13 @@ namespace SourceFuse.Assessment.Common.Services
             song.S3Url = $"https://{_bucketName}.s3.amazonaws.com/{key}";
             await _songRepository.AddSongAsync(song);
 
-            var createdSongModel = _mapper.Map<SongModel>(song);
+            var createdSongModel = _mapper.Map<SongRespModel>(song);
             createdSongModel.S3Url = GeneratePreSignedURL(key, 10);
 
             return createdSongModel;
         }
 
-        public async Task UpdateSongAsync(Guid id, SongModel songModel)
+        public async Task UpdateSongAsync(Guid id, SongReqModel songModel)
         {
             var song = _mapper.Map<Song>(songModel);
 

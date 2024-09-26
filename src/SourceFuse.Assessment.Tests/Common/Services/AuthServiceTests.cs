@@ -31,7 +31,7 @@ namespace SourceFuse.Assessment.Tests.Services
         public void Login_ValidUser_ReturnsToken()
         {
             // Arrange
-            var loginModel = new LoginModel { Username = "spuertab1", Password = "123" };
+            var loginModel = new LoginReqModel { Username = "spuertab1", Password = "123" };
 
             // Act
             var token = _authService.Login(loginModel);
@@ -44,7 +44,7 @@ namespace SourceFuse.Assessment.Tests.Services
         public void Login_InvalidUser_ReturnsNull()
         {
             // Arrange
-            var loginModel = new LoginModel { Username = "invalidUser", Password = "wrongPassword" };
+            var loginModel = new LoginReqModel { Username = "invalidUser", Password = "wrongPassword" };
 
             // Act
             var token = _authService.Login(loginModel);
@@ -57,7 +57,7 @@ namespace SourceFuse.Assessment.Tests.Services
         public void Login_ValidUserWithDifferentRoles_ReturnsToken()
         {
             // Arrange
-            var loginModel = new LoginModel { Username = "spuertab2", Password = "123" };
+            var loginModel = new LoginReqModel { Username = "spuertab2", Password = "123" };
 
             // Act
             var token = _authService.Login(loginModel);

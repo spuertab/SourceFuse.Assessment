@@ -4,6 +4,6 @@ namespace SourceFuse.Assessment.Common.Services
 {
     public interface IAuthService
     {
-        string Login(LoginModel model);
+        string Login(LoginReqModel model);
     }
 }

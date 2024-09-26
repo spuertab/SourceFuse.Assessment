@@ -8,7 +8,8 @@ namespace SourceFuse.Assessment.Common.Mappings
     {
         public MappingProfile()
         {
-            CreateMap<Song, SongModel>().ReverseMap();
+            CreateMap<Song, SongReqModel>().ReverseMap();
+            CreateMap<Song, SongRespModel>().ReverseMap();
         }
     }
 }

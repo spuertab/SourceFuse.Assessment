@@ -45,10 +45,10 @@ namespace SourceFuse.Assessment.Tests.Common.Services
         {
             // Arrange
             var songs = new List<Song> { new Song { SongId = Guid.NewGuid(), Title = "Test Song", S3Url = "test-key" } };
-            var songModels = new List<SongModel> { new SongModel { SongId = Guid.NewGuid(), Title = "Test Song", S3Url = "test-key" } };
+            var songModels = new List<SongRespModel> { new SongRespModel { SongId = Guid.NewGuid(), Title = "Test Song", S3Url = "test-key" } };
 
             _songRepositoryMock.Setup(repo => repo.GetSongsAsync()).ReturnsAsync(songs);
-            _mapperMock.Setup(m => m.Map<IEnumerable<SongModel>>(It.IsAny<IEnumerable<Song>>())).Returns(songModels);
+            _mapperMock.Setup(m => m.Map<IEnumerable<SongRespModel>>(It.IsAny<IEnumerable<Song>>())).Returns(songModels);
             _s3ClientMock.Setup(s3 => s3.GetPreSignedURL(It.IsAny<GetPreSignedUrlRequest>())).Returns("https://signed-url");
 
             // Act
@@ -66,10 +66,10 @@ namespace SourceFuse.Assessment.Tests.Common.Services
             // Arrange
             var songId = Guid.NewGuid();
             var song = new Song { SongId = songId, Title = "Test Song", S3Url = "test-key" };
-            var songModel = new SongModel { SongId = songId, Title = "Test Song", S3Url = "test-key" };
+            var songModel = new SongRespModel { SongId = songId, Title = "Test Song", S3Url = "test-key" };
 
             _songRepositoryMock.Setup(repo => repo.GetSongByIdAsync(songId)).ReturnsAsync(song);
-            _mapperMock.Setup(m => m.Map<SongModel>(It.IsAny<Song>())).Returns(songModel);
+            _mapperMock.Setup(m => m.Map<SongRespModel>(It.IsAny<Song>())).Returns(songModel);
             _s3ClientMock.Setup(s3 => s3.GetPreSignedURL(It.IsAny<GetPreSignedUrlRequest>())).Returns("https://signed-url");
 
             // Act
@@ -87,11 +87,31 @@ namespace SourceFuse.Assessment.Tests.Common.Services
             // Arrange
             var fileMock = new Mock<IFormFile>();
             fileMock.Setup(f => f.ContentType).Returns("audio/wav");
-            var songModel = new SongModel { Title = "Test Song" };
+            var songModel = new SongReqModel { Title = "Test Song" };
 
             // Act & Assert
             var ex = Assert.ThrowsAsync<ArgumentException>(() => _songService.AddSongAsync(fileMock.Object, songModel));
             Assert.AreEqual("The file must be a valid music format.", ex.Message);
+        }
+
+        [Test]
+        public void AddSongAsync_SongIdAlreadyExists_ThrowsInvalidOperationException()
+        {
+            // Arrange
+            var songId = Guid.NewGuid();
+            var fileMock = new Mock<IFormFile>();
+            fileMock.Setup(f => f.ContentType).Returns("audio/mpeg");
+            fileMock.Setup(f => f.FileName).Returns("test.mp3");
+            fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream());
+
+            var songModel = new SongReqModel { SongId = songId, Title = "Test Song" };
+            var existingSong = new Song { SongId = songId, Title = "Existing Song" };
+
+            _songRepositoryMock.Setup(repo => repo.GetSongByIdAsync(songId)).ReturnsAsync(existingSong);
+
+            // Act & Assert
+            var ex = Assert.ThrowsAsync<InvalidOperationException>(() => _songService.AddSongAsync(fileMock.Object, songModel));
+            Assert.AreEqual("A song with the same ID already exists.", ex.Message);
         }
 
         [Test]
@@ -103,14 +123,16 @@ namespace SourceFuse.Assessment.Tests.Common.Services
             fileMock.Setup(f => f.FileName).Returns("test.mp3");
             fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream());
 
-            var songModel = new SongModel { Title = "Test Song" };
+            var songModel = new SongReqModel { Title = "Test Song" };
+            var songRespModel = new SongRespModel { Title = "Test Song" };
             var song = new Song { SongId = Guid.NewGuid(), Title = "Test Song", S3Url = "test-key" };
 
-            _mapperMock.Setup(m => m.Map<Song>(It.IsAny<SongModel>())).Returns(song);
+            _mapperMock.Setup(m => m.Map<Song>(It.IsAny<SongReqModel>())).Returns(song);
             _s3ClientMock.Setup(s3 => s3.PutObjectAsync(It.IsAny<PutObjectRequest>(), default))
                          .ReturnsAsync(new PutObjectResponse());
             _songRepositoryMock.Setup(repo => repo.AddSongAsync(It.IsAny<Song>())).Returns(Task.CompletedTask);
-            _mapperMock.Setup(m => m.Map<SongModel>(It.IsAny<Song>())).Returns(songModel);
+            _mapperMock.Setup(m => m.Map<SongReqModel>(It.IsAny<Song>())).Returns(songModel);
+            _mapperMock.Setup(m => m.Map<SongRespModel>(It.IsAny<Song>())).Returns(songRespModel);
             _s3ClientMock.Setup(s3 => s3.GetPreSignedURL(It.IsAny<GetPreSignedUrlRequest>())).Returns("https://signed-url");
 
             // Act
@@ -127,10 +149,10 @@ namespace SourceFuse.Assessment.Tests.Common.Services
         {
             // Arrange
             var songId = Guid.NewGuid();
-            var songModel = new SongModel { SongId = Guid.NewGuid(), Title = "Test Song" };
+            var songModel = new SongReqModel { SongId = Guid.NewGuid(), Title = "Test Song" };
             var song = new Song { SongId = songModel.SongId, Title = songModel.Title };
 
-            _mapperMock.Setup(m => m.Map<Song>(It.IsAny<SongModel>())).Returns(song);
+            _mapperMock.Setup(m => m.Map<Song>(It.IsAny<SongReqModel>())).Returns(song);
 
             // Act & Assert
             var ex = Assert.ThrowsAsync<ArgumentException>(() => _songService.UpdateSongAsync(songId, songModel));
@@ -142,10 +164,10 @@ namespace SourceFuse.Assessment.Tests.Common.Services
         {
             // Arrange
             var songId = Guid.NewGuid();
-            var songModel = new SongModel { SongId = songId, Title = "Test Song" };
+            var songModel = new SongReqModel { SongId = songId, Title = "Test Song" };
             var song = new Song { SongId = songId, Title = "Test Song" };
 
-            _mapperMock.Setup(m => m.Map<Song>(It.IsAny<SongModel>())).Returns(song);
+            _mapperMock.Setup(m => m.Map<Song>(It.IsAny<SongReqModel>())).Returns(song);
             _songRepositoryMock.Setup(repo => repo.UpdateSongAsync(It.IsAny<Song>())).Returns(Task.CompletedTask);
 
             // Act

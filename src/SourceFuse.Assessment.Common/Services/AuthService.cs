@@ -16,7 +16,7 @@ namespace SourceFuse.Assessment.Common.Services
             _configuration = configuration;
         }
 
-        public string Login(LoginModel model)
+        public string Login(LoginReqModel model)
         {
             if ((model.Username == "spuertab1" || model.Username == "spuertab2") && model.Password == "123")
             {

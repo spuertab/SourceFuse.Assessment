@@ -18,7 +18,7 @@ namespace SourceFuse.Assessment.Api.Controllers
         }
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginModel model)
+        public IActionResult Login([FromBody] LoginReqModel model)
         {
             _logger.LogInformation("Login attempt for user: {Username}", model.Username);
 

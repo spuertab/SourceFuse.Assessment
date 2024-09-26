@@ -5,10 +5,10 @@ namespace SourceFuse.Assessment.Common.Services
 {
     public interface ISongService
     {
-        Task<IEnumerable<SongModel>> GetSongsAsync();
-        Task<SongModel> GetSongByIdAsync(Guid id);
-        Task<SongModel> AddSongAsync(IFormFile file, SongModel song);
-        Task UpdateSongAsync(Guid id, SongModel song);
+        Task<IEnumerable<SongRespModel>> GetSongsAsync();
+        Task<SongRespModel> GetSongByIdAsync(Guid id);
+        Task<SongRespModel> AddSongAsync(IFormFile file, SongReqModel song);
+        Task UpdateSongAsync(Guid id, SongReqModel song);
         Task DeleteSongAsync(Guid id);
     }
 }

@@ -20,7 +20,7 @@ namespace SourceFuse.Assessment.Api.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin,User")]
-        public async Task<ActionResult<IEnumerable<SongModel>>> GetSongs()
+        public async Task<ActionResult<IEnumerable<SongRespModel>>> GetSongs()
         {
             _logger.LogInformation("Fetching all songs.");
             var songs = await _songService.GetSongsAsync();
@@ -30,7 +30,7 @@ namespace SourceFuse.Assessment.Api.Controllers
 
         [HttpGet("{id}")]
         [Authorize(Roles = "Admin,User")]
-        public async Task<ActionResult<SongModel>> GetSong(Guid id)
+        public async Task<ActionResult<SongRespModel>> GetSong(Guid id)
         {
             _logger.LogInformation("Fetching song with ID: {Id}", id);
             var song = await _songService.GetSongByIdAsync(id);
@@ -47,7 +47,7 @@ namespace SourceFuse.Assessment.Api.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<SongModel>> PostSong([FromForm] UploadSongModel testModel)
+        public async Task<ActionResult<SongRespModel>> PostSong([FromForm] UploadSongReqModel testModel)
         {
             _logger.LogInformation("Adding a new song with title: {Title}", testModel.SongData.Title);
             var createdSong = await _songService.AddSongAsync(testModel.File, testModel.SongData);
@@ -57,7 +57,7 @@ namespace SourceFuse.Assessment.Api.Controllers
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> PutSong(Guid id, SongModel song)
+        public async Task<IActionResult> PutSong(Guid id, SongReqModel song)
         {
             if (!ModelState.IsValid)
             {

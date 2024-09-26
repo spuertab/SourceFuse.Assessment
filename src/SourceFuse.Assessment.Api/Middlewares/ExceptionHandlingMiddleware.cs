@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text.Json;
 
 namespace SourceFuse.Assessment.Api.Middlewares
 {
@@ -33,27 +34,36 @@ namespace SourceFuse.Assessment.Api.Middlewares
                     _logger.LogWarning("Forbidden request made to {Path}", context.Request.Path);
                 }
             }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "An argument exception has occurred: {Message}", ex.Message);
+                await HandleExceptionAsync(context, ex, HttpStatusCode.BadRequest);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "An invalid operation exception has occurred: {Message}", ex.Message);
+                await HandleExceptionAsync(context, ex, HttpStatusCode.Conflict);
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An unhandled exception has occurred.");
-                await HandleExceptionAsync(context, ex);
+                await HandleExceptionAsync(context, ex, HttpStatusCode.InternalServerError);
             }
         }
 
-        private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+        private Task HandleExceptionAsync(HttpContext context, Exception exception, HttpStatusCode statusCode)
         {
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            context.Response.StatusCode = (int)statusCode;
 
-            var result = new
+            var result = JsonSerializer.Serialize(new
             {
-                StatusCode = context.Response.StatusCode,
-                Message = "Internal Server Error from the custom middleware.",
-                Detailed = exception.Message,
-                StackTrace = exception.StackTrace
-            };
+                context.Response.StatusCode,
+                exception.Message,
+                Detailed = exception.ToString()
+            });
 
-            return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(result));
+            return context.Response.WriteAsync(result);
         }
     }
 }

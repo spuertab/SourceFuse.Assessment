@@ -27,10 +27,10 @@ namespace SourceFuse.Assessment.Tests.Api.Controllers
         public async Task GetSongs_ReturnsOkResult_WithListOfSongs()
         {
             // Arrange
-            var songs = new List<SongModel>
+            var songs = new List<SongRespModel>
             {
-                new SongModel { SongId = Guid.NewGuid(), Title = "Song 1" },
-                new SongModel { SongId = Guid.NewGuid(), Title = "Song 2" }
+                new SongRespModel { SongId = Guid.NewGuid(), Title = "Song 1" },
+                new SongRespModel { SongId = Guid.NewGuid(), Title = "Song 2" }
             };
             _songServiceMock.Setup(service => service.GetSongsAsync()).ReturnsAsync(songs);
 
@@ -41,8 +41,8 @@ namespace SourceFuse.Assessment.Tests.Api.Controllers
             Assert.IsInstanceOf<OkObjectResult>(result.Result);
             var okResult = result.Result as OkObjectResult;
             Assert.IsNotNull(okResult);
-            Assert.IsInstanceOf<IEnumerable<SongModel>>(okResult.Value);
-            Assert.AreEqual(2, ((IEnumerable<SongModel>)okResult.Value).Count());
+            Assert.IsInstanceOf<IEnumerable<SongRespModel>>(okResult.Value);
+            Assert.AreEqual(2, ((IEnumerable<SongRespModel>)okResult.Value).Count());
         }
 
         [Test]
@@ -50,8 +50,8 @@ namespace SourceFuse.Assessment.Tests.Api.Controllers
         {
             // Arrange
             var songId = Guid.NewGuid();
-            var song = new SongModel { SongId = songId, Title = "Test Song" };
-            _songServiceMock.Setup(service => service.GetSongByIdAsync(songId)).ReturnsAsync(song);
+            var songRespModel = new SongRespModel { SongId = songId, Title = "Test Song" };
+            _songServiceMock.Setup(service => service.GetSongByIdAsync(songId)).ReturnsAsync(songRespModel);
 
             // Act
             var result = await _songsController.GetSong(songId);
@@ -60,8 +60,8 @@ namespace SourceFuse.Assessment.Tests.Api.Controllers
             Assert.IsInstanceOf<OkObjectResult>(result.Result);
             var okResult = result.Result as OkObjectResult;
             Assert.IsNotNull(okResult);
-            Assert.IsInstanceOf<SongModel>(okResult.Value);
-            Assert.AreEqual(songId, ((SongModel)okResult.Value).SongId);
+            Assert.IsInstanceOf<SongRespModel>(okResult.Value);
+            Assert.AreEqual(songId, ((SongRespModel)okResult.Value).SongId);
         }
 
         [Test]
@@ -69,7 +69,7 @@ namespace SourceFuse.Assessment.Tests.Api.Controllers
         {
             // Arrange
             var songId = Guid.NewGuid();
-            _songServiceMock.Setup(service => service.GetSongByIdAsync(songId)).ReturnsAsync((SongModel)null);
+            _songServiceMock.Setup(service => service.GetSongByIdAsync(songId)).ReturnsAsync((SongRespModel)null);
 
             // Act
             var result = await _songsController.GetSong(songId);
@@ -82,12 +82,14 @@ namespace SourceFuse.Assessment.Tests.Api.Controllers
         public async Task PostSong_ReturnsCreatedAtActionResult_WithSong()
         {
             // Arrange
-            var song = new SongModel { SongId = Guid.NewGuid(), Title = "New Song" };
+            var songId = Guid.NewGuid();
+            var song = new SongReqModel { SongId = songId, Title = "New Song" };
+            var songResp = new SongRespModel { SongId = songId, Title = "New Song" };
             var fileMock = new Mock<IFormFile>();
-            _songServiceMock.Setup(service => service.AddSongAsync(fileMock.Object, song)).ReturnsAsync(song);
+            _songServiceMock.Setup(service => service.AddSongAsync(fileMock.Object, song)).ReturnsAsync(songResp);
 
             // Act
-            var uploadSong = new UploadSongModel
+            var uploadSong = new UploadSongReqModel
             {
                 SongData = song,
                 File = fileMock.Object
@@ -98,8 +100,8 @@ namespace SourceFuse.Assessment.Tests.Api.Controllers
             Assert.IsInstanceOf<CreatedAtActionResult>(result.Result);
             var createdAtActionResult = result.Result as CreatedAtActionResult;
             Assert.IsNotNull(createdAtActionResult);
-            Assert.IsInstanceOf<SongModel>(createdAtActionResult.Value);
-            Assert.AreEqual(song.SongId, ((SongModel)createdAtActionResult.Value).SongId);
+            Assert.IsInstanceOf<SongRespModel>(createdAtActionResult.Value);
+            Assert.AreEqual(song.SongId, ((SongRespModel)createdAtActionResult.Value).SongId);
         }
 
         [Test]
@@ -107,7 +109,7 @@ namespace SourceFuse.Assessment.Tests.Api.Controllers
         {
             // Arrange
             var songId = Guid.NewGuid();
-            var song = new SongModel { SongId = songId, Title = "Updated Song" };
+            var song = new SongReqModel { SongId = songId, Title = "Updated Song" };
 
             // Act
             var result = await _songsController.PutSong(songId, song);
@@ -121,7 +123,7 @@ namespace SourceFuse.Assessment.Tests.Api.Controllers
         {
             // Arrange
             var songId = Guid.NewGuid();
-            var song = new SongModel { SongId = songId, Title = "Song to Delete" };
+            var song = new SongRespModel { SongId = songId, Title = "Song to Delete" };
             _songServiceMock.Setup(service => service.GetSongByIdAsync(songId)).ReturnsAsync(song);
 
             // Act

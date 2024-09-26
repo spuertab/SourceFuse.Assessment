@@ -39,6 +39,8 @@ namespace SourceFuse.Assessment.Common.Resources.Repositories
             song.UpdatedAt = DateTime.UtcNow;
 
             _context.Entry(song).State = EntityState.Modified;
+            _context.Entry(song).Property(s => s.S3Url).IsModified = false;
+
             await _context.SaveChangesAsync();
         }
 

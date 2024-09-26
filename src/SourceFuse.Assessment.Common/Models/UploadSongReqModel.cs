@@ -3,11 +3,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SourceFuse.Assessment.Common.Models
 {
-    public class UploadSongModel
+    public class UploadSongReqModel
     {
         [Required(ErrorMessage = "File is required.")]
         public IFormFile File { get; set; }
 
-        public SongModel SongData { get; set; }
+        public SongReqModel SongData { get; set; }
     }
 }

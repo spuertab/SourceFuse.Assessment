@@ -26,7 +26,7 @@ namespace SourceFuse.Assessment.Tests.Api.Controllers
         public void Login_ReturnsOkResult_WithToken_WhenLoginIsSuccessful()
         {
             // Arrange
-            var loginModel = new LoginModel { Username = "testuser", Password = "password" };
+            var loginModel = new LoginReqModel { Username = "testuser", Password = "password" };
             var token = "testtoken";
             _authServiceMock.Setup(service => service.Login(loginModel)).Returns(token);
 
@@ -45,7 +45,7 @@ namespace SourceFuse.Assessment.Tests.Api.Controllers
         public void Login_ReturnsUnauthorized_WhenLoginFails()
         {
             // Arrange
-            var loginModel = new LoginModel { Username = "testuser", Password = "wrongpassword" };
+            var loginModel = new LoginReqModel { Username = "testuser", Password = "wrongpassword" };
             _authServiceMock.Setup(service => service.Login(loginModel)).Returns((string)null);
 
             // Act
