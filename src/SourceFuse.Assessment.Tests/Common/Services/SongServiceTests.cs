@@ -84,7 +84,7 @@ namespace SourceFuse.Assessment.Tests.Common.Services
 
             // Act & Assert
             var ex = Assert.ThrowsAsync<ArgumentException>(() => _songService.AddSongAsync(fileMock.Object, songModel));
-            Assert.AreEqual("The file must be in MP3 format.", ex.Message);
+            Assert.AreEqual("The file must be a music format.", ex.Message);
         }
 
         [Test]

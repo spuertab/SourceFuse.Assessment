@@ -26,7 +26,6 @@ namespace SourceFuse.Assessment.Common.Models
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
         public DateTime ReleaseDate { get; set; }
 
-        [Url]
         public string S3Url { get; set; }
     }
 }

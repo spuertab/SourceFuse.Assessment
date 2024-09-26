@@ -47,8 +47,10 @@ namespace SourceFuse.Assessment.Api.Middlewares
 
             var result = new
             {
-                context.Response.StatusCode,
-                Message = "Internal Server Error from the custom middleware."
+                StatusCode = context.Response.StatusCode,
+                Message = "Internal Server Error from the custom middleware.",
+                Detailed = exception.Message,
+                StackTrace = exception.StackTrace
             };
 
             return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(result));

@@ -87,7 +87,12 @@ namespace SourceFuse.Assessment.Tests.Api.Controllers
             _songServiceMock.Setup(service => service.AddSongAsync(fileMock.Object, song)).ReturnsAsync(song);
 
             // Act
-            var result = await _songsController.PostSong(fileMock.Object, song);
+            var uploadSong = new UploadSongModel
+            {
+                SongData = song,
+                File = fileMock.Object
+            };
+            var result = await _songsController.PostSong(uploadSong);
 
             // Assert
             Assert.IsInstanceOf<CreatedAtActionResult>(result.Result);

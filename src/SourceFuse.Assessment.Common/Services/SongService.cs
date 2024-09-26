@@ -38,9 +38,9 @@ namespace SourceFuse.Assessment.Common.Services
 
         public async Task<SongModel> AddSongAsync(IFormFile file, SongModel songModel)
         {
-            if (!IsMp3File(file))
+            if (!IsMusicFile(file))
             {
-                throw new ArgumentException("The file must be in MP3 format.");
+                throw new ArgumentException("The file must be a valid music format.");
             }
 
             var song = _mapper.Map<Song>(songModel);
@@ -92,7 +92,7 @@ namespace SourceFuse.Assessment.Common.Services
             await _songRepository.DeleteSongAsync(song);
         }
 
-        private bool IsMp3File(IFormFile file)
+        private bool IsMusicFile(IFormFile file)
         {
             if (file == null)
             {
@@ -104,7 +104,34 @@ namespace SourceFuse.Assessment.Common.Services
                 return false;
             }
 
-            return file.ContentType == "audio/mpeg" || file.FileName.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase);
+            var allowedMimeTypes = new List<string>
+            {
+                "audio/mpeg", // .mp3
+                "audio/wav",  // .wav
+                "audio/x-wav",
+                "audio/x-ms-wma", // .wma
+                "audio/aac",  // .aac
+                "audio/ogg",  // .ogg
+                "audio/flac", // .flac
+                "audio/mp4",  // .m4a
+                "audio/x-m4a"
+            };
+
+            var allowedExtensions = new List<string>
+            {
+                ".mp3",
+                ".wav",
+                ".wma",
+                ".aac",
+                ".ogg",
+                ".flac",
+                ".m4a"
+            };
+
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+            return allowedMimeTypes.Contains(file.ContentType.ToLowerInvariant()) &&
+                   allowedExtensions.Contains(fileExtension);
         }
     }
 }

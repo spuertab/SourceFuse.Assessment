@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
 using SourceFuse.Assessment.Api.Middlewares;
+using SourceFuse.Assessment.Common.Mappings;
 using SourceFuse.Assessment.Common.Resources;
 using SourceFuse.Assessment.Common.Resources.Repositories;
 using SourceFuse.Assessment.Common.Services;
@@ -38,7 +39,7 @@ builder.Services.AddScoped<ISongService, SongService>();
 builder.Services.AddScoped<ISongRepository, SongRepository>();
 
 // Register AutoMapper
-builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Authentication and authorization
 builder.Services.AddAuthentication(options =>
