@@ -3,12 +3,27 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Events;
+using SourceFuse.Assessment.Api.Middlewares;
 using SourceFuse.Assessment.Common.Resources;
 using SourceFuse.Assessment.Common.Resources.Repositories;
 using SourceFuse.Assessment.Common.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configurar Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.File(
+        path: "logs/log-.txt",
+        rollingInterval: RollingInterval.Day,
+        restrictedToMinimumLevel: LogEventLevel.Information
+    )
+    .CreateLogger();
 
 // Add services to the container.
 builder.Services.AddDbContext<MusicContext>(options =>
@@ -88,6 +103,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Exception Handling Middleware
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 

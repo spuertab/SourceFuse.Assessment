@@ -38,6 +38,11 @@ namespace SourceFuse.Assessment.Common.Services
 
         public async Task<SongModel> AddSongAsync(IFormFile file, SongModel songModel)
         {
+            if (!IsMp3File(file))
+            {
+                throw new ArgumentException("The file must be in MP3 format.");
+            }
+
             var song = _mapper.Map<Song>(songModel);
 
             var key = $"{Guid.NewGuid()}_{file.FileName}";
@@ -85,6 +90,21 @@ namespace SourceFuse.Assessment.Common.Services
 
             await _s3Client.DeleteObjectAsync(deleteObjectRequest);
             await _songRepository.DeleteSongAsync(song);
+        }
+
+        private bool IsMp3File(IFormFile file)
+        {
+            if (file == null)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(file.ContentType) || string.IsNullOrEmpty(file.FileName))
+            {
+                return false;
+            }
+
+            return file.ContentType == "audio/mpeg" || file.FileName.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

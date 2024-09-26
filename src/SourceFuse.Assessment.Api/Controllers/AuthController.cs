@@ -4,30 +4,33 @@ using SourceFuse.Assessment.Common.Services;
 
 namespace SourceFuse.Assessment.Api.Controllers
 {
-    namespace SourceFuse.Assessment.Api.Controllers
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AuthController : ControllerBase
     {
-        [ApiController]
-        [Route("api/[controller]")]
-        public class AuthController : ControllerBase
+        private readonly IAuthService _authService;
+        private readonly ILogger<AuthController> _logger;
+
+        public AuthController(IAuthService authService, ILogger<AuthController> logger)
         {
-            private readonly IAuthService _authService;
+            _authService = authService;
+            _logger = logger;
+        }
 
-            public AuthController(IAuthService authService)
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] LoginModel model)
+        {
+            _logger.LogInformation("Login attempt for user: {Username}", model.Username);
+
+            var token = _authService.Login(model);
+            if (token != null)
             {
-                _authService = authService;
+                _logger.LogInformation("Login successful for user: {Username}", model.Username);
+                return Ok(new { Token = token });
             }
 
-            [HttpPost("login")]
-            public IActionResult Login([FromBody] LoginModel model)
-            {
-                var token = _authService.Login(model);
-                if (token != null)
-                {
-                    return Ok(new { Token = token });
-                }
-
-                return Unauthorized();
-            }
+            _logger.LogWarning("Login failed for user: {Username}", model.Username);
+            return Unauthorized();
         }
     }
 }

@@ -9,7 +9,5 @@
         public string Genre { get; set; }
         public DateTime ReleaseDate { get; set; }
         public string S3Url { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
     }
 }

@@ -10,17 +10,21 @@ namespace SourceFuse.Assessment.Api.Controllers
     public class SongsController : ControllerBase
     {
         private readonly ISongService _songService;
+        private readonly ILogger<SongsController> _logger;
 
-        public SongsController(ISongService songService)
+        public SongsController(ISongService songService, ILogger<SongsController> logger)
         {
             _songService = songService;
+            _logger = logger;
         }
 
         [HttpGet]
         [Authorize(Roles = "Admin,User")]
         public async Task<ActionResult<IEnumerable<SongModel>>> GetSongs()
         {
+            _logger.LogInformation("Fetching all songs.");
             var songs = await _songService.GetSongsAsync();
+            _logger.LogInformation("Fetched {Count} songs.", songs.Count());
             return Ok(songs);
         }
 
@@ -28,13 +32,16 @@ namespace SourceFuse.Assessment.Api.Controllers
         [Authorize(Roles = "Admin,User")]
         public async Task<ActionResult<SongModel>> GetSong(Guid id)
         {
+            _logger.LogInformation("Fetching song with ID: {Id}", id);
             var song = await _songService.GetSongByIdAsync(id);
 
             if (song == null)
             {
+                _logger.LogWarning("Song with ID: {Id} not found.", id);
                 return NotFound();
             }
 
+            _logger.LogInformation("Fetched song with ID: {Id}", id);
             return Ok(song);
         }
 
@@ -42,7 +49,9 @@ namespace SourceFuse.Assessment.Api.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<SongModel>> PostSong([FromForm] IFormFile file, [FromForm] SongModel song)
         {
+            _logger.LogInformation("Adding a new song with title: {Title}", song.Title);
             var createdSong = await _songService.AddSongAsync(file, song);
+            _logger.LogInformation("Added new song with ID: {Id}", createdSong.SongId);
             return CreatedAtAction(nameof(GetSong), new { id = createdSong.SongId }, createdSong);
         }
 
@@ -50,19 +59,9 @@ namespace SourceFuse.Assessment.Api.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PutSong(Guid id, SongModel song)
         {
-            try
-            {
-                await _songService.UpdateSongAsync(id, song);
-            }
-            catch (ArgumentException)
-            {
-                return BadRequest();
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound();
-            }
-
+            _logger.LogInformation("Updating song with ID: {Id}", id);
+            await _songService.UpdateSongAsync(id, song);
+            _logger.LogInformation("Updated song with ID: {Id}", id);
             return NoContent();
         }
 
@@ -70,15 +69,9 @@ namespace SourceFuse.Assessment.Api.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteSong(Guid id)
         {
-            try
-            {
-                await _songService.DeleteSongAsync(id);
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound();
-            }
-
+            _logger.LogInformation("Deleting song with ID: {Id}", id);
+            await _songService.DeleteSongAsync(id);
+            _logger.LogInformation("Deleted song with ID: {Id}", id);
             return NoContent();
         }
     }

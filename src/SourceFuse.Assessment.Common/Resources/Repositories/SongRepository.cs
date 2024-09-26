@@ -1,5 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SourceFuse.Assessment.Common.Resources.Entities;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SourceFuse.Assessment.Common.Resources.Repositories
 {
@@ -24,12 +27,17 @@ namespace SourceFuse.Assessment.Common.Resources.Repositories
 
         public async Task AddSongAsync(Song song)
         {
+            song.CreatedAt = DateTime.UtcNow;
+            song.UpdatedAt = DateTime.UtcNow;
+
             _context.Songs.Add(song);
             await _context.SaveChangesAsync();
         }
 
         public async Task UpdateSongAsync(Song song)
         {
+            song.UpdatedAt = DateTime.UtcNow;
+
             _context.Entry(song).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
