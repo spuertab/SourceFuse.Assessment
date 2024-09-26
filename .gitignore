@@ -35,3 +35,7 @@ artifacts/
 
 # Resharper files
 _ReSharper*/
+
+# Appsettings
+appsettings.json
+appsettings.Development.json
