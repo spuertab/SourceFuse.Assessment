@@ -27,13 +27,27 @@ namespace SourceFuse.Assessment.Common.Services
         public async Task<IEnumerable<SongModel>> GetSongsAsync()
         {
             var songs = await _songRepository.GetSongsAsync();
-            return _mapper.Map<IEnumerable<SongModel>>(songs);
+            var songModels = _mapper.Map<IEnumerable<SongModel>>(songs);
+
+            foreach (var songModel in songModels)
+            {
+                songModel.S3Url = GeneratePreSignedURL(songModel.S3Url.Split('/').Last(), 10);
+            }
+
+            return songModels;
         }
 
         public async Task<SongModel> GetSongByIdAsync(Guid id)
         {
             var song = await _songRepository.GetSongByIdAsync(id);
-            return _mapper.Map<SongModel>(song);
+            var songModel = _mapper.Map<SongModel>(song);
+
+            if (songModel != null)
+            {
+                songModel.S3Url = GeneratePreSignedURL(songModel.S3Url.Split('/').Last(), 10);
+            }
+
+            return songModel;
         }
 
         public async Task<SongModel> AddSongAsync(IFormFile file, SongModel songModel)
@@ -59,7 +73,10 @@ namespace SourceFuse.Assessment.Common.Services
             song.S3Url = $"https://{_bucketName}.s3.amazonaws.com/{key}";
             await _songRepository.AddSongAsync(song);
 
-            return _mapper.Map<SongModel>(song);
+            var createdSongModel = _mapper.Map<SongModel>(song);
+            createdSongModel.S3Url = GeneratePreSignedURL(key, 10);
+
+            return createdSongModel;
         }
 
         public async Task UpdateSongAsync(Guid id, SongModel songModel)
@@ -132,6 +149,19 @@ namespace SourceFuse.Assessment.Common.Services
 
             return allowedMimeTypes.Contains(file.ContentType.ToLowerInvariant()) &&
                    allowedExtensions.Contains(fileExtension);
+        }
+
+        private string GeneratePreSignedURL(string key, int durationInMinutes)
+        {
+            var request = new GetPreSignedUrlRequest
+            {
+                BucketName = _bucketName,
+                Key = key,
+                Expires = DateTime.UtcNow.AddMinutes(durationInMinutes)
+            };
+
+            string url = _s3Client.GetPreSignedURL(request);
+            return url;
         }
     }
 }
