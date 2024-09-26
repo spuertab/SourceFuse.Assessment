@@ -1,11 +1,17 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
+using Amazon.Runtime;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using SourceFuse.Assessment.Common.Resources.Entities;
 using SourceFuse.Assessment.Common.Resources.Repositories;
 using SourceFuse.Assessment.Common.Models;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SourceFuse.Assessment.Common.Services
 {
@@ -16,12 +22,23 @@ namespace SourceFuse.Assessment.Common.Services
         private readonly IMapper _mapper;
         private readonly string _bucketName;
 
-        public SongService(ISongRepository songRepository, IAmazonS3 s3Client, IConfiguration configuration, IMapper mapper)
+        public SongService(ISongRepository songRepository, IConfiguration configuration, IMapper mapper)
         {
             _songRepository = songRepository;
-            _s3Client = s3Client;
             _mapper = mapper;
             _bucketName = configuration["AWS:BucketName"];
+
+            var awsOptions = new AmazonS3Config
+            {
+                RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(configuration["AWS:Region"])
+            };
+
+            var awsCredentials = new BasicAWSCredentials(
+                configuration["AWS:AccessKey"],
+                configuration["AWS:SecretKey"]
+            );
+
+            _s3Client = new AmazonS3Client(awsCredentials, awsOptions);
         }
 
         public async Task<IEnumerable<SongRespModel>> GetSongsAsync()
