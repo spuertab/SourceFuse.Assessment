@@ -44,10 +44,12 @@ namespace SourceFuse.Assessment.Tests.Common.Services
         public async Task GetSongsAsync_ReturnsSongs()
         {
             // Arrange
-            var songs = new List<Song> { new Song { SongId = Guid.NewGuid(), Title = "Test Song" } };
+            var songs = new List<Song> { new Song { SongId = Guid.NewGuid(), Title = "Test Song", S3Url = "test-key" } };
+            var songModels = new List<SongModel> { new SongModel { SongId = Guid.NewGuid(), Title = "Test Song", S3Url = "test-key" } };
+
             _songRepositoryMock.Setup(repo => repo.GetSongsAsync()).ReturnsAsync(songs);
-            _mapperMock.Setup(m => m.Map<IEnumerable<SongModel>>(It.IsAny<IEnumerable<Song>>()))
-                       .Returns(new List<SongModel> { new SongModel { SongId = Guid.NewGuid(), Title = "Test Song" } });
+            _mapperMock.Setup(m => m.Map<IEnumerable<SongModel>>(It.IsAny<IEnumerable<Song>>())).Returns(songModels);
+            _s3ClientMock.Setup(s3 => s3.GetPreSignedURL(It.IsAny<GetPreSignedUrlRequest>())).Returns("https://signed-url");
 
             // Act
             var result = await _songService.GetSongsAsync();
@@ -55,6 +57,7 @@ namespace SourceFuse.Assessment.Tests.Common.Services
             // Assert
             Assert.IsNotNull(result);
             Assert.IsNotEmpty(result);
+            Assert.AreEqual("https://signed-url", result.First().S3Url);
         }
 
         [Test]
@@ -62,9 +65,12 @@ namespace SourceFuse.Assessment.Tests.Common.Services
         {
             // Arrange
             var songId = Guid.NewGuid();
-            var song = new Song { SongId = songId, Title = "Test Song" };
+            var song = new Song { SongId = songId, Title = "Test Song", S3Url = "test-key" };
+            var songModel = new SongModel { SongId = songId, Title = "Test Song", S3Url = "test-key" };
+
             _songRepositoryMock.Setup(repo => repo.GetSongByIdAsync(songId)).ReturnsAsync(song);
-            _mapperMock.Setup(m => m.Map<SongModel>(It.IsAny<Song>())).Returns(new SongModel { SongId = songId, Title = "Test Song" });
+            _mapperMock.Setup(m => m.Map<SongModel>(It.IsAny<Song>())).Returns(songModel);
+            _s3ClientMock.Setup(s3 => s3.GetPreSignedURL(It.IsAny<GetPreSignedUrlRequest>())).Returns("https://signed-url");
 
             // Act
             var result = await _songService.GetSongByIdAsync(songId);
@@ -72,6 +78,7 @@ namespace SourceFuse.Assessment.Tests.Common.Services
             // Assert
             Assert.IsNotNull(result);
             Assert.AreEqual(songId, result.SongId);
+            Assert.AreEqual("https://signed-url", result.S3Url);
         }
 
         [Test]
@@ -84,7 +91,7 @@ namespace SourceFuse.Assessment.Tests.Common.Services
 
             // Act & Assert
             var ex = Assert.ThrowsAsync<ArgumentException>(() => _songService.AddSongAsync(fileMock.Object, songModel));
-            Assert.AreEqual("The file must be a music format.", ex.Message);
+            Assert.AreEqual("The file must be a valid music format.", ex.Message);
         }
 
         [Test]
@@ -97,13 +104,14 @@ namespace SourceFuse.Assessment.Tests.Common.Services
             fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream());
 
             var songModel = new SongModel { Title = "Test Song" };
-            var song = new Song { SongId = Guid.NewGuid(), Title = "Test Song" };
+            var song = new Song { SongId = Guid.NewGuid(), Title = "Test Song", S3Url = "test-key" };
 
             _mapperMock.Setup(m => m.Map<Song>(It.IsAny<SongModel>())).Returns(song);
             _s3ClientMock.Setup(s3 => s3.PutObjectAsync(It.IsAny<PutObjectRequest>(), default))
                          .ReturnsAsync(new PutObjectResponse());
             _songRepositoryMock.Setup(repo => repo.AddSongAsync(It.IsAny<Song>())).Returns(Task.CompletedTask);
             _mapperMock.Setup(m => m.Map<SongModel>(It.IsAny<Song>())).Returns(songModel);
+            _s3ClientMock.Setup(s3 => s3.GetPreSignedURL(It.IsAny<GetPreSignedUrlRequest>())).Returns("https://signed-url");
 
             // Act
             var result = await _songService.AddSongAsync(fileMock.Object, songModel);
@@ -111,6 +119,7 @@ namespace SourceFuse.Assessment.Tests.Common.Services
             // Assert
             Assert.IsNotNull(result);
             Assert.AreEqual(songModel.Title, result.Title);
+            Assert.AreEqual("https://signed-url", result.S3Url);
         }
 
         [Test]
@@ -156,6 +165,26 @@ namespace SourceFuse.Assessment.Tests.Common.Services
             // Act & Assert
             var ex = Assert.ThrowsAsync<KeyNotFoundException>(() => _songService.DeleteSongAsync(songId));
             Assert.AreEqual("Song not found", ex.Message);
+        }
+
+        [Test]
+        public async Task DeleteSongAsync_ValidSong_DeletesSong()
+        {
+            // Arrange
+            var songId = Guid.NewGuid();
+            var song = new Song { SongId = songId, S3Url = "test-key" };
+
+            _songRepositoryMock.Setup(repo => repo.GetSongByIdAsync(songId)).ReturnsAsync(song);
+            _songRepositoryMock.Setup(repo => repo.DeleteSongAsync(It.IsAny<Song>())).Returns(Task.CompletedTask);
+            _s3ClientMock.Setup(s3 => s3.DeleteObjectAsync(It.IsAny<DeleteObjectRequest>(), default))
+                         .ReturnsAsync(new DeleteObjectResponse());
+
+            // Act
+            await _songService.DeleteSongAsync(songId);
+
+            // Assert
+            _songRepositoryMock.Verify(repo => repo.DeleteSongAsync(It.IsAny<Song>()), Times.Once);
+            _s3ClientMock.Verify(s3 => s3.DeleteObjectAsync(It.IsAny<DeleteObjectRequest>(), default), Times.Once);
         }
     }
 }
